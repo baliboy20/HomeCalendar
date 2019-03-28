@@ -1,17 +1,10 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import {OverviewComponent} from './overview/overview.component';
-import {OverviewModule} from './overview/overview.module';
-import {SimpleDataEntryComponent} from './simple-data-entry/simple-data-entry.component';
 
-const routes: Routes = [
-    {path: 'overview', component: OverviewComponent},
-    {path: 'data-entry', component: SimpleDataEntryComponent},
-    {path: '', redirectTo: 'dataEntry', pathMatch: 'full'},
-];
+const routes: Routes = [];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes), OverviewModule],
+  imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule]
 })
 export class AppRoutingModule { }
