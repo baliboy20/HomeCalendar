@@ -1,36 +1,50 @@
-import {Inject, Injectable} from '@angular/core';
-import {from} from 'rxjs';
-import {reduce} from 'rxjs/internal/operators';
+import {Injectable} from '@angular/core';
+// import {from} from 'rxjs';
 import * as moment from 'moment';
-import {Moment} from 'moment';
-import _date = moment.unitOfTime._date;
+// import {Moment} from 'moment';
+// import _date = moment.unitOfTime._date;
 import {DateUtils} from '../app/utils/date-utils';
 import {HttpService} from './http.service';
+import {map, mergeMap, reduce} from 'rxjs/internal/operators';
+import {tap} from 'rxjs/operators';
+import {flatMap} from 'tslint/lib/utils';
+import {from, Observable} from 'rxjs';
 
 @Injectable({
     providedIn: 'root'
 })
 export class AppointmentService {
 
-    constructor(@Inject('HttpService') private http: HttpService) {
+    constructor( private http: HttpService) {
+        // if (!http) {
+        //     throw new Error('HTTp service no injectecd');
+        // } else {
+        //     console.log('Is inmected');
+        // }
     }
 
     reducer = (acc, app: IAppointment) => {
-        let dt = app.from;
-        if (dt instanceof Date || dt instanceof moment) {
-            dt = moment(dt).toDate().toLocaleDateString();
-        }
-        const dt1: string = dt as string;
+        // const dt = app.from;
+        // if (dt instanceof Date || dt instanceof moment) {
+        //     dt = moment(dt).toDate().toLocaleDateString();
+        // }
+        // console.log('reduceIng', app, acc);
+        const dt1: string =  DateUtils.dateKeyFormat(app.from);
         if (acc.hasOwnProperty(dt1)) {
             acc[dt1].push(app);
         } else {
             acc[dt1] = [app];
         }
         return acc;
-    };
+    }
 
     getAppointments() {
-        return this.http.findAll().subscribe(console.log);
+        // console.log('inside appts');
+        return this.http.findAll()
+            .pipe(
+                mergeMap( (a: any) => from(a)),
+                map( (a: any) => AppointmentUtils.transformToEditingFormat(a)),
+                reduce(this.reducer, {}));
     }
 
 }
@@ -71,8 +85,8 @@ export class AppointmentUtils {
             title: arg.title,
             from: arg.from,
             to: arg.to,
-            from_datepart: moment(arg.from).toDate(),
-            to_datepart: moment(arg.to).toDate(),
+            from_datepart: DateUtils.dateKeyFormat(arg.from),
+            to_datepart: DateUtils.dateKeyFormat(arg.to),
             from_timepart: moment(arg.to).format('hh:mm a'),
             to_timepart: moment(arg.to).format('hh:mm a'),
             attendees: arg.attendees,
@@ -84,8 +98,8 @@ export class AppointmentUtils {
 }
 
 export interface IAppointment {
-    from: Date | Moment | string;
-    to: Date | Moment | string;
+    from:  string;
+    to:    string;
     title: string;
     attendees: string;
     location?: string;

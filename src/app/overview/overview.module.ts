@@ -12,6 +12,8 @@ import {
 import {ApptQuickViewComponent } from './appt-quick-view/appt-quick-view.component';
 import {MousedownDirective} from './appt-quick-view/mousedown.directive';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {HttpService} from '../../services/http.service';
+import { MonsPipe } from './mons.pipe';
 
 @NgModule({
     imports: [
@@ -29,10 +31,11 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
         OverviewComponent,
         DayRendererComponent,
         MousedownDirective,
-        ApptQuickViewComponent],
-    exports: [OverviewComponent],
+        ApptQuickViewComponent,
+        MonsPipe],
+    exports: [OverviewComponent, MonsPipe],
     entryComponents: [ ApptQuickViewComponent],
-    providers: [CalendarService, AppointmentService, {provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: {hasBackdrop: false}}]
+    providers: [CalendarService, AppointmentService, {provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: {hasBackdrop: false}}, HttpService]
 })
 export class OverviewModule {
 }

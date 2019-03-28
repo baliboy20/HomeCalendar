@@ -3,9 +3,10 @@ import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {CalendarService} from '../../services/calendar.service';
 import * as moment from 'moment';
 import {CdkVirtualForOf} from '@angular/cdk/scrolling';
-import {BehaviorSubject, concat, from, Observable} from 'rxjs';
-import {tap} from 'rxjs/internal/operators';
+import {ReplaySubject} from 'rxjs';
+import {map} from 'rxjs/internal/operators';
 import {AppointmentService, IAppointment} from '../../services/appointment.service';
+import {CalcurService} from '../services/calcur.service';
 
 @Component({
     selector: 'app-overview',
@@ -23,34 +24,55 @@ export class OverviewComponent implements OnInit {
     items = [];
     currentIdx: any = null;
     currentDate;
-    data: BehaviorSubject<any>;
+    data: ReplaySubject<any> = new ReplaySubject<any>();
     recordLock = false;
     appointments: { string: Array<IAppointment> };
 
-    constructor(public service: CalendarService, public appointmentsService: AppointmentService) {
+    constructor(public service: CalendarService,
+                private calcur: CalcurService,
+                public appointmentsService: AppointmentService) {
 
     }
 
     ngOnInit() {
         this.appointmentsService.getAppointments()
-            // .subscribe(a => {
-            //     console.log('appps', a);
-            //     this.appointments = a;
-            //     // this.initCalendar();
-            // });
-        this.initCalendar();
+            .subscribe(a => {
+                this.appointments = a;
+                this.initCalendar();
+            });
+        this.data.subscribe(a => {
+            // console.log('c', Array.from(a));
+        })
+        this.calcur.setup()
+            .pipe(map(s => Array.from(s)))
+            .pipe(map(this.reformat))
+            .subscribe(a => {
+            this.data.next( (a) );
+        });
+    }
+
+    reformat(value: any) {
+        const dates_arr = [];
+// let week: { [day: string]: any[]};
+// let days: any[];
+
+        while ( value.length > 0) {
+            const arr = value.splice(0, 7);
+            console.log('arr', arr);
+            const dt = moment(arr[0]).format('DD/MMM/YY/');
+            const x = {id: dt, days: arr};
+            dates_arr.push(x);
+        }
+        //  console.log('formatted array', dates_arr);
+        return dates_arr;
     }
 
     initCalendar() {
-
-        this.service.initCalendar(moment('23/May/2019'), 1)
-            .subscribe(a => {
-                this.data = new BehaviorSubject<any>(this.items);
-            });
-// console.log('items', this.items);
-        // this.data
-        //     .pipe(tap(console.log))
-        //     .subscribe(console.log);
+        // this.service.initCalendar(moment('23/March/2019'), 1)
+        //     .subscribe(a => {
+        //         // console.log('inint calendar', a);
+        //         this.data.next(a);
+        //     });
     }
 
     scrollTo() {
@@ -62,29 +84,35 @@ export class OverviewComponent implements OnInit {
     }
 
     generateCalendar() {
-        // this.showCal = !this.showCal;
-        // this.appointmentsService.getAppointments()
-        //     .subscribe(a => {
-        //         console.log(a);
-        //     })
-        this.items = (this.service._increaseUpperBoundDate(1));
-        this.data.next(this.items);
+        (this.service._increaseUpperBoundDate(1))
+            .subscribe(this.data.next);
+        // this.data.next(this.items);
         this.recordLock = false;
-
     }
 
     trackbyFn(idx, item) {
         return idx + item[0];
     }
 
-
-    scrollIdx(ev, cal) {
-        this.currentIdx = moment(this.items[ev][0]).format('MMMM YY');
+    scrollIdx(ev) {
+        if (true) {
+            return;
+        }
+        // console.log('scrollid ev value', this.items[ev]);
+        this.data.subscribe(a => {
+            if (a.length === 0) {
+                console.log('data', a, ev);
+            } else {
+                // console.log('data', a[ev]);
+                this.currentIdx = moment(a[ev][0]).format('MMMM YY');
+            }
+        });
+        // this.currentIdx = moment(this.items[ev][0]).format('MMMM YY');
         ScrollDirection.updateScrollPosition(ev);
 
         if (ev + 7 > this.viewport.getDataLength() && !this.recordLock) {
             this.recordLock = true;
-            // this.generateCalendar();
+            this.generateCalendar();
         }
 
         if (ev === 0 && ScrollDirection.direction === ScrollDirection.IS_UP) {

@@ -49,12 +49,16 @@ export class DayRendererComponent implements OnInit {
     }
 
     @Input() set appointments(arg: IAppointment[]) {
+
         this._appointments = arg || [];
+        // console.log('Appts in Day renderer', arg, this._appointments);
+    //
     }
 
-    @Input() set item(arg: any) {
-        // console.log('setting appointment inside the Renderer', arg, this._appointments);
-        this.calcColor(moment(arg).format('M'), moment(arg).format('d'), arg);
+// string with the format 'DD/MM/YY'
+    @Input('item') set item(arg: any) {
+       // console.log('setting appointment inside the Renderer', arg);
+        this.calcColor(moment(arg.id).format('M'), moment(arg.id).format('d'), arg);
         this.value = moment(arg).format('D');
         this.date = arg;
     }

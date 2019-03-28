@@ -2,7 +2,7 @@ import * as moment from 'moment';
 import {Moment} from 'moment';
 
 export class DateUtils {
-    static dateKeyFormat(arg: Date | Moment | string): string {
+    static dateKeyFormat(arg: string | Moment): string {
         if (moment(arg).isValid) {
             return moment(arg).format('D/MMM/YYYY');
         } else {
@@ -11,7 +11,7 @@ export class DateUtils {
         return null;
     }
 
-    static appendDateWithTimeAsString(dt: Date | Moment | string, tm: string) {
+    static appendDateWithTimeAsString(dt: string, tm: string) {
 
        let  hour = +tm.substr(0, 2);
        const min = +tm.substr(3, 2);
@@ -19,8 +19,8 @@ export class DateUtils {
            hour += 12;
        }
         if (moment(dt).isValid) {
-            dt = moment(dt).clone();
-         const   ret = moment(dt).set({'hour': hour, 'minute': min});
+          const  dt1 = moment(dt).clone();
+         const   ret = moment(dt1).set({'hour': hour, 'minute': min});
          // console.log('ret', ret, hour, min, tm.substr(6, 2), tm);
          return ret.toDate().toISOString();
         } else {

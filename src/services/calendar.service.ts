@@ -2,17 +2,32 @@ import {Injectable} from '@angular/core';
 import * as moment from 'moment';
 import {Moment} from 'moment';
 import {Error} from 'tslint/lib/error';
-import {Observable, of} from 'rxjs';
+import {Observable, of, ReplaySubject} from 'rxjs';
+import {DateUtils} from '../app/utils/date-utils';
+import {isUndefined} from 'util';
 
 @Injectable({
     providedIn: 'root'
 })
 export class CalendarService {
+    set calItems(value: Array<any>) {
+        this._calItems = value;
+    }
+
     get calItems(): Array<any> {
         return this._calItems;
     }
 
     private _calItems: Array<any>;
+    private _calItems$: ReplaySubject<any> = new ReplaySubject<any>();
+
+    get calItems$(): ReplaySubject<any> {
+        return this._calItems$;
+    }
+
+    set calItems$(value: ReplaySubject<any>) {
+        this._calItems$ = value;
+    }
 
     get lowerWeek(): any {
         return this._lowerWeek;
@@ -28,6 +43,7 @@ export class CalendarService {
     }
 
     set upperWeek(value: any) {
+        console.log('setting upper weeek', value);
         this._upperWeek = value;
     }
 
@@ -73,8 +89,12 @@ export class CalendarService {
         return moment(firstDayofMonth).subtract(weekdayIdxF - 1, 'days');
     }
 
-    _fmDt(date: Moment): string {
-        return date.format('D/MMM/YYYY');
+    _fmDt(date: Moment | string): string {
+        if (isUndefined(date)) {
+            console.log('fmDt, value is undefined');
+        }
+        return DateUtils.dateKeyFormat(date);
+        // return date.format('D/MMM/YYYY');
     }
 
     /**
@@ -101,8 +121,9 @@ export class CalendarService {
 
 
     initCalendar(curDate: any, numMonths: number): Observable<Array<any>> {
-        // const arr = this._calItems = this._generateCalendar(curDate, numMonths);
-        return of(this._generateCalendar(curDate, numMonths));
+        this.calItems$.next(this._generateCalendar(curDate, numMonths));
+        this.calItems$.subscribe(a => this.calItems = a);
+        return this.calItems$;
     }
 
     _populateStruc(lowerdate: Moment): any {
@@ -126,8 +147,8 @@ export class CalendarService {
 
     _generateCalendar(curDate: any = moment(), numMnths: number): Array<any> {
         numMnths = (numMnths < 0) ? numMnths * -1 : numMnths;
-        let upperDate = this._upperWeek = this._calcUpperMostDate(curDate, numMnths);
-        let lowerDate = this._lowerWeek = this._calcLowerMostDate(curDate, -numMnths);
+        let upperDate = this.upperWeek = this._calcUpperMostDate(curDate, numMnths);
+        let lowerDate = this.lowerWeek = this._calcLowerMostDate(curDate, -numMnths);
         upperDate = upperDate.clone().add(6, 'days'); // taking it to sun.
         let iterGuard = 0;
         const weeks = [];
@@ -155,8 +176,8 @@ export class CalendarService {
         const a = this.lowerWeek;
         // const work out starting week of month before;
         numMnths = (numMnths > 0) ? numMnths * -1 : numMnths;
-        const newlowerDate: Moment = this._calcLowerMostDate(this._lowerWeek, numMnths).clone();
-        const currLowerDate: Moment = this._lowerWeek;
+        const newlowerDate: Moment = this._calcLowerMostDate(this.lowerWeek, numMnths).clone();
+        const currLowerDate: Moment = this.lowerWeek;
         let iterGuard = 0;
         const weeks = [];
         let iter: Moment = newlowerDate.clone();
@@ -172,11 +193,11 @@ export class CalendarService {
                 break;
             }
         }
-        this._lowerWeek = newlowerDate;
+        this.lowerWeek = newlowerDate;
         // this.calItems.unshift(...weeks);
         this._calItems = Array().concat(weeks, this.calItems);
         // console.log('NEW ITESMADDED BEFORE', this._fmDt(currLowerDate), this._fmDt(newlowerDate));
-        return this.calItems;
+        return this.calItems$.next(this.calItems);
     }
 
     /**
@@ -186,34 +207,32 @@ export class CalendarService {
      * @return array of active rates.
      */
     _increaseUpperBoundDate(numMnths) {
-        console.log('CALLLING...', this._fmDt(this._upperWeek));
+        console.log('CALLLING...', this._fmDt(this.upperWeek), this.upperWeek);
         // get the existing lower monday
         // const a = this.lowerWeek;
         // const work out starting week of month before;
         numMnths = (numMnths < 0) ? numMnths * -1 : numMnths;
-        const newUpperDate: Moment = this._calcUpperMostDate(this._upperWeek, numMnths);
-        let currUpperDate: Moment = this._upperWeek.add(7, 'days');
+        const newUpperDate: Moment = this._calcUpperMostDate(this.upperWeek, numMnths);
+        let currUpperDate: Moment = this.upperWeek.add(7, 'days');
         let iterGuard = 0;
         const weeks = [];
 
-        console.log('NEW upperdayes', this._fmDt(this._upperWeek), this._fmDt(currUpperDate), this._fmDt(newUpperDate));
+        console.log('NEW upperdayes', this._fmDt(this.upperWeek), this._fmDt(currUpperDate), this._fmDt(newUpperDate));
         while (currUpperDate.isSameOrBefore(newUpperDate)) {
-            // console.log('ITERATING..', this._fmDt(newUpperDate), this._fmDt(currUpperDate));
             const strc = this._populateStruc(currUpperDate.clone());
-            // console.log('strc', strc);
             weeks.push(strc);
-            // console.log('weeks', this._fmDt(currUpperDate), weeks.length);
             currUpperDate = moment(currUpperDate).add(7, 'days').clone();
             iterGuard++;
             if (iterGuard > 30) {
                 break;
             }
         }
-        this._upperWeek = newUpperDate;
+        this.upperWeek = newUpperDate;
         // this.calItems.push(...weeks);
-        console.log('new weeks in Calitme', newUpperDate, this._upperWeek, weeks);
+        console.log('new weeks in Calitme', newUpperDate, this.upperWeek, weeks);
         this._calItems = Array().concat(this.calItems, weeks);
-        return this.calItems;
+        this.calItems$.next(this.calItems);
+        return this.calItems$;
     }
 
     /**
@@ -222,7 +241,7 @@ export class CalendarService {
      * @private
      * @return array of active rates.
      */
-    _decreaseUpperBoundDate(numMnths): Array<any> {
+    _decreaseUpperBoundDate(numMnths): Observable<any> {
         // get the existing lower monday
         const a = this.upperWeek;
         // const work out starting week of month before;
@@ -247,8 +266,9 @@ export class CalendarService {
                 break;
             }
         }
-        this._upperWeek = newUpperDate;
-        return this.calItems;
+        this.upperWeek = newUpperDate;
+        this.calItems$.next(this.calItems);
+        return this.calItems$;
     }
 
     /**
@@ -257,7 +277,7 @@ export class CalendarService {
      * @private
      * @return array of active rates.
      */
-    _increaseLowerBoundDate(numMnths): Array<any> {
+    _increaseLowerBoundDate(numMnths): Observable<Array<any>> {
         // get the existing lower monday
         const a = this.lowerWeek;
         // const work out starting week of month before;
@@ -282,8 +302,9 @@ export class CalendarService {
                 break;
             }
         }
-        this._lowerWeek = newLowerDate;
-        return this.calItems;
+        this.lowerWeek = newLowerDate;
+        this.calItems$.next(this.calItems);
+        return this.calItems$;
     }
 
 }

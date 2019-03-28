@@ -1,58 +1,73 @@
 $calenderBackgroundColor: rgba(179, 173, 152, 0.38);
 $calendarBorderColor: #efefef;
-@import url('../../styles.scss');
-
+@import url('../../styles.css');
 
 .main-cal-container {
-    display: block;
-    width: 80%;
+  display: block;
+  width: 80%;
 }
+
 .example-viewport {
-    height: 500px;
-    width: 100%;
-    //border: 1px solid $calendarBorderColor;
+  height: 500px;
+  width: 100%;
+  //border: 1px solid $calendarBorderColor;
 }
 
-
-.week{
-    display: flex;
-    flex: 0 0 auto;
-    flex-flow: row nowrap;
-    height: 100px;
-    //background-color: lightcyan;
-    //border: 1px black solid;
+.week {
+  display: flex;
+  flex: 1 1 100%;
+  flex-flow: row wrap;
+  height: 100px;
+  background-color: orange;
+  border: 1px blue solid;
+  //border: 1px black solid;
 }
 
 .day-renderer {
-    flex: 1 1 14%;
-
-
+  display: flex;
+  flex:  0 0 14%;
+  background-color: orange;
+  //border: 1px blue solid;
 }
 
 .header-container {
-    padding: 8px 0 8px 0;
-    text-align: center;
-    display: flex;
-    //flex:  0 0 200px;
-    width: 100%;
-    background-color: $calenderBackgroundColor;
-    border: 0px solid $calendarBorderColor;
+  padding: 8px 0 8px 0;
+  text-align: center;
+  display: flex;
+  //flex:  0 0 200px;
+  width: 100%;
+  background-color: $calenderBackgroundColor;
+  border: 0px solid $calendarBorderColor;
 }
+
 .header-label {
-    border: 1px $calendarBorderColor solid;
-    flex: 1 1 17%;
+  border: 1px $calendarBorderColor solid;
+  flex: 1 1 17%;
 }
-
-
-
-
 
 //.week {
-  //  display: flex;
-  //  flex:  1 1 14%;
-  //height: 50px;
-  //  background-color: red;
-  //  border: 1px solid darkgray;
-  //  z-index: 12;
-  //  transform: translateY(-50px);
-  //}
+//  display: flex;
+//  flex:  1 1 14%;
+////height: 50px;
+////  background-color: red;
+//  border: 1px solid darkgray;
+//  //z-index: 12;
+//  //transform: translateY(-50px);
+//  flex-flow: row wrap;
+//}
+
+.test-container{
+
+  display : flex;
+  flex: 1 1 100%;
+  height: 300px;
+  flex-flow: row wrap;
+
+}
+
+.test-child {
+  border: 1px solid red;
+
+  flex: 0 1 19%;
+  height: 30px
+}
